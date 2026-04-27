@@ -1,4 +1,22 @@
-# C++ Build files
+# ---------------------------------------------------------------------------
+# Route Planner - Professional .gitignore
+# ---------------------------------------------------------------------------
+
+# Data Sets (Heavy files that should NEVER be pushed to GitHub)
+Data Set/
+*.txt
+*.graphml
+*.csv
+*.pbf
+*.osm
+
+# Datasets and cache (From GitHub)
+backend/dataset/
+backend/cache/
+
+# C++ Build & Compilation Artifacts
+build/
+bin/
 *.o
 *.obj
 *.exe
@@ -6,25 +24,34 @@
 *.so
 *.dylib
 *.out
+*.a
+*.lib
 *.app
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
+
+# Compiled binaries built by GitHub logic
 backend/main
 backend/server
 backend/test
 
-# Datasets and cache
-backend/dataset/
-backend/cache/
+# Logs
+*.log
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
 
 # IDE and Editor files
 .vscode/
 .idea/
 *.suo
+*.sln
+*.cbp
 *.ntvs*
 *.njsproj
-*.sln
 *.swp
 *~
-.DS_Store
-
-# Logs
-*.log
