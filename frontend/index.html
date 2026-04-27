@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bi-Directional Route Planner</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div id="control-panel">
+            <h1>Route Planner</h1>
+            
+            <div class="card" id="dataset-section">
+                <h3>Dataset</h3>
+                <div id="graph-stats">Loading stats...</div>
+            </div>
+            
+            <div class="card" id="input-section">
+                <h3>Select Nodes</h3>
+                <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">Click on the map or enter IDs</p>
+                <div class="input-group">
+                    <label>Source Node ID</label>
+                    <input type="number" id="start-node" min="0" placeholder="e.g. 0">
+                </div>
+                
+                <div class="input-group">
+                    <label>Destination Node ID</label>
+                    <input type="number" id="end-node" min="0" placeholder="e.g. 10">
+                </div>
+                <button id="swap-btn" class="secondary" style="margin-top:0.5rem; padding: 0.5rem;">Swap Nodes</button>
+            </div>
+            
+            <div class="card" id="algorithm-section">
+                <h3>Algorithm</h3>
+                <select id="algo-select">
+                    <option value="Bidirectional Dijkstra">Bidirectional Dijkstra (Default)</option>
+                    <option value="Dijkstra">Standard Dijkstra</option>
+                    <option value="A* Star">A* Search</option>
+                    <option value="BFS">BFS (Unweighted)</option>
+                </select>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                <button id="find-path-btn">Find Route</button>
+                <button id="compare-btn" class="secondary">Compare All Algorithms</button>
+                <button id="clear-btn" class="secondary" style="background:#dc2626; color:white;">Clear Map</button>
+            </div>
+            
+            <div id="results-panel" class="card hidden">
+                <h3>Results</h3>
+                <div class="stat-row"><span>Algorithm:</span> <span id="res-algo">-</span></div>
+                <div class="stat-row"><span>Distance:</span> <span id="res-distance">-</span> m</div>
+                <div class="stat-row"><span>Path Length:</span> <span id="res-length">-</span> hops</div>
+                <div class="stat-row"><span>Time:</span> <span id="res-time">-</span> ms</div>
+                <div class="stat-row"><span>Nodes Visited:</span> <span id="res-visited">-</span></div>
+            </div>
+
+            <div id="compare-panel" class="card hidden">
+                <h3>Comparison</h3>
+                <canvas id="compare-chart" width="400" height="300"></canvas>
+            </div>
+            
+            <div id="error-msg" class="hidden"></div>
+            <div id="loading" class="hidden">Computing...</div>
+        </div>
+        
+        <div id="map-container">
+            <div id="map"></div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

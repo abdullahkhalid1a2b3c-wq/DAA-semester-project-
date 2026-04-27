@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+    font-family: 'Outfit', sans-serif; 
+    background: #eef2f6; 
+    height: 100vh; 
+    overflow: hidden; 
+}
+#app { display: flex; height: 100vh; width: 100vw; }
+
+#control-panel {
+    width: 30%;
+    min-width: 400px;
+    background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 100%);
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.3);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    z-index: 10;
+    overflow-y: auto;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+h1 { 
+    font-size: 2.2rem; 
+    font-weight: 700; 
+    background: linear-gradient(90deg, #93c5fd, #e0e7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center; 
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+.card { 
+    background: rgba(255, 255, 255, 0.06); 
+    padding: 1.25rem; 
+    border-radius: 12px; 
+    border: 1px solid rgba(255, 255, 255, 0.12); 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+h3 { 
+    font-size: 1.15rem; 
+    font-weight: 600;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15); 
+    padding-bottom: 0.5rem; 
+    margin-bottom: 1rem; 
+    color: #f8fafc; 
+}
+
+#graph-stats { font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; }
+
+.input-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
+.input-group label { font-size: 0.85rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;}
+input, select {
+    padding: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: 'Outfit', sans-serif;
+    outline: none;
+    transition: all 0.2s ease;
+}
+input::placeholder { color: #64748b; }
+input:focus, select:focus { 
+    border-color: #60a5fa; 
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+select option {
+    background: #1e3a8a;
+    color: white;
+}
+
+button {
+    padding: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+button:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.6);
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+}
+button:active { transform: translateY(0); }
+
+button.secondary { 
+    background: rgba(255, 255, 255, 0.1); 
+    color: #e2e8f0; 
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+button.secondary:hover { 
+    background: rgba(255, 255, 255, 0.15); 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.hidden { display: none !important; }
+
+.stat-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 0.75rem; 
+    font-size: 1.05rem;
+    color: #e2e8f0;
+}
+.stat-row span:last-child { 
+    color: #93c5fd; 
+    font-weight: 700; 
+    font-size: 1.15rem;
+    background: rgba(147, 197, 253, 0.15);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid rgba(147, 197, 253, 0.3);
+}
+
+#map-container {
+    width: 70%;
+    position: relative;
+    box-shadow: inset 10px 0 20px rgba(0,0,0,0.05);
+}
+#map { width: 100%; height: 100%; background: #eef2f6; }
+
+#error-msg {
+    color: #fecaca;
+    background: rgba(239, 68, 68, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    border-left: 4px solid #ef4444;
+    font-weight: 500;
+}
+
+#loading { 
+    color: #93c5fd; 
+    text-align: center; 
+    font-weight: 600; 
+    font-size: 1.1rem;
+    padding: 1rem;
+    animation: pulse 1.5s ease-in-out infinite; 
+}
+@keyframes pulse { 0% {opacity:0.6; transform: scale(0.98);} 50% {opacity:1; transform: scale(1);} 100% {opacity:0.6; transform: scale(0.98);} }
