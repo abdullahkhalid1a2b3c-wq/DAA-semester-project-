@@ -1,0 +1,30 @@
+# C++ Build files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+*.app
+backend/main
+backend/server
+backend/test
+
+# Datasets and cache
+backend/dataset/
+backend/cache/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+.DS_Store
+
+# Logs
+*.log
