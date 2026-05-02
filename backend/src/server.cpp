@@ -39,11 +39,11 @@ std::string handle_request(const std::string& request) {
     
     if(method == "GET") {
         if(path == "/" || path == "/index.html") {
-            return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + read_file("frontend/index.html");
+            return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + read_file("../frontend/index.html");
         } else if(path == "/style.css") {
-            return "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\n\r\n" + read_file("frontend/style.css");
+            return "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\n\r\n" + read_file("../frontend/style.css");
         } else if(path == "/script.js") {
-            return "HTTP/1.1 200 OK\r\nContent-Type: application/javascript\r\n\r\n" + read_file("frontend/script.js");
+            return "HTTP/1.1 200 OK\r\nContent-Type: application/javascript\r\n\r\n" + read_file("../frontend/script.js");
         } else if(path == "/api/stats") {
             long long edges = 0;
             for (const auto& u : g.adj_forward) edges += u.size();
@@ -173,6 +173,9 @@ int main(int argc, char* argv[]) {
     if (listen(server_fd, 3) == SOCKET_ERROR) return 1;
 
     std::cout << "Server starting at http://localhost:8080\n";
+    // Automatically open the default web browser
+    system("start http://localhost:8080");
+
 
     while (true) {
         SOCKET client_socket = accept(server_fd, NULL, NULL);
