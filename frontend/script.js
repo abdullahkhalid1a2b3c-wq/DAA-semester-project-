@@ -7,8 +7,24 @@ let currentChart;
 let nodeCoords = {}; 
 let coordNodes = [];
 
+let mapPlaces;
+let pathLayerPlaces;
+let placeMarkers = [];
+let intermediateStopCount = 0;
+let lastScreen = 'home-screen';
+
+function getThemeColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--btn-primary').trim() || '#2563eb';
+}
+
 // Screen Management
 function showScreen(screenId) {
+    // Determine the current screen before switching
+    const current = document.querySelector('.screen.active-screen');
+    if (current && !['compare-screen', 'help-screen'].includes(current.id)) {
+        lastScreen = current.id;
+    }
+
     document.querySelectorAll('.screen').forEach(s => {
         s.classList.remove('active-screen');
         s.classList.add('hidden');
@@ -17,9 +33,13 @@ function showScreen(screenId) {
     s.classList.remove('hidden');
     s.classList.add('active-screen');
     
-    // Resize map when planner becomes visible
-    if(screenId === 'planner-screen' && map) {
-        setTimeout(() => map.invalidateSize(), 100);
+    // Resize maps when screens become visible
+    if(screenId === 'planner-screen') {
+        if(map) [100, 300, 500].forEach(delay => setTimeout(() => map.invalidateSize(), delay));
+    }
+    if(screenId === 'places-planner-screen') {
+        if(!mapPlaces) initMapPlaces(33.6844, 73.0479);
+        if(mapPlaces) [100, 300, 500].forEach(delay => setTimeout(() => mapPlaces.invalidateSize(), delay));
     }
 }
 
@@ -117,6 +137,263 @@ document.getElementById('back-home-help-btn').addEventListener('click', () => {
 document.getElementById('back-home-btn').addEventListener('click', () => {
     showScreen('home-screen');
 });
+document.getElementById('nav-places-btn').addEventListener('click', () => {
+    showScreen('places-planner-screen');
+});
+document.getElementById('back-home-places-btn').addEventListener('click', () => {
+    showScreen('home-screen');
+});
+document.getElementById('back-to-planner-btn').addEventListener('click', () => {
+    showScreen(lastScreen);
+});
+
+// Helper for Search suggestions
+function debounce(func, timeout = 300){
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args); }, timeout);
+    };
+}
+
+async function fetchSuggestions(query, box) {
+    if(!query || query.length < 3) {
+        box.classList.add('hidden');
+        return;
+    }
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Islamabad")}&limit=5`;
+        const res = await fetch(url);
+        const data = await res.json();
+        box.innerHTML = '';
+        if(data.length === 0) {
+            box.classList.add('hidden');
+            return;
+        }
+        data.forEach(place => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            div.innerText = place.display_name;
+            div.onclick = () => {
+                const input = box.previousElementSibling;
+                input.value = place.display_name;
+                input.dataset.lat = place.lat;
+                input.dataset.lon = place.lon;
+                box.classList.add('hidden');
+            };
+            box.appendChild(div);
+        });
+        box.classList.remove('hidden');
+    } catch(err) { console.error(err); }
+}
+
+const debounceFetchSuggestions = debounce((q, b) => fetchSuggestions(q, b), 400);
+
+document.addEventListener('input', (e) => {
+    if(e.target.classList.contains('place-search-input')) {
+        const box = e.target.nextElementSibling;
+        debounceFetchSuggestions(e.target.value, box);
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if(!e.target.closest('.search-input-wrapper')) {
+        document.querySelectorAll('.suggestions-box').forEach(box => box.classList.add('hidden'));
+    }
+});
+
+// Add Stop Logic
+document.getElementById('add-stop-btn').addEventListener('click', () => {
+    intermediateStopCount++;
+    const container = document.getElementById('stops-container');
+    const destGroup = document.getElementById('destination-group');
+    
+    const newStop = document.createElement('div');
+    newStop.className = 'search-group';
+    newStop.innerHTML = `
+        <label style="font-size: 0.8rem; font-weight: 700; color: #8b5cf6; text-transform: uppercase; display:block; margin-bottom:0.4rem;">Intermediate Stop ${intermediateStopCount}</label>
+        <div class="search-input-wrapper" style="position:relative;">
+            <input type="text" class="place-search-input" placeholder="Enter stop landmark..." data-type="stop" style="width:100%; padding:0.8rem; border:1px solid #e2e8f0; border-radius:8px;">
+            <div class="suggestions-box hidden"></div>
+            <button class="remove-stop-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+    container.insertBefore(newStop, destGroup);
+});
+
+async function geocodeDirectly(query) {
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Islamabad")}&limit=1`;
+        const res = await fetch(url);
+        const data = await res.json();
+        return data.length > 0 ? {lat: data[0].lat, lon: data[0].lon} : null;
+    } catch { return null; }
+}
+
+async function findNearestNode(lat, lon) {
+    try {
+        const res = await fetch(`/api/nearest?lat=${lat}&lon=${lon}`);
+        const data = await res.json();
+        return data.id;
+    } catch { return -1; }
+}
+
+function showPlacesLoading(show) {
+    document.getElementById('places-loading').classList.toggle('hidden', !show);
+}
+function showPlacesError(msg) {
+    const err = document.getElementById('places-error');
+    if(msg) { err.innerText = msg; err.classList.remove('hidden'); }
+    else err.classList.add('hidden');
+}
+
+function initMapPlaces(lat, lon) {
+    if (mapPlaces) return;
+    mapPlaces = L.map('map-places').setView([lat, lon], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(mapPlaces);
+    pathLayerPlaces = L.layerGroup().addTo(mapPlaces);
+}
+
+document.getElementById('clear-places-btn').addEventListener('click', () => {
+    document.querySelectorAll('.place-search-input').forEach(i => i.value = '');
+    document.getElementById('places-results').classList.add('hidden');
+    pathLayerPlaces.clearLayers();
+    placeMarkers.forEach(m => mapPlaces.removeLayer(m));
+    placeMarkers = [];
+});
+
+document.getElementById('find-place-route-btn').addEventListener('click', async () => {
+    const inputs = document.querySelectorAll('.place-search-input');
+    const waypoints = [];
+    showPlacesLoading(true);
+    showPlacesError("");
+    
+    for(let input of inputs) {
+        if(!input.dataset.lat || !input.dataset.lon) {
+            if(input.value) {
+                const geo = await geocodeDirectly(input.value);
+                if(geo) waypoints.push({lat: parseFloat(geo.lat), lon: parseFloat(geo.lon), name: input.value});
+                else { showPlacesError(`Could not find location: ${input.value}`); showPlacesLoading(false); return; }
+            } else { showPlacesError("Please fill all location fields"); showPlacesLoading(false); return; }
+        } else {
+            waypoints.push({lat: parseFloat(input.dataset.lat), lon: parseFloat(input.dataset.lon), name: input.value});
+        }
+    }
+    
+    if(waypoints.length < 2) { showPlacesLoading(false); return; }
+    
+    const nodeIds = [];
+    for(let wp of waypoints) {
+        const id = await findNearestNode(wp.lat, wp.lon);
+        if(id !== -1) nodeIds.push(id);
+    }
+    
+    const selectedAlgo = document.getElementById('algo-select-places').value;
+    
+    let fullPath = [];
+    let totalDist = 0;
+    
+    for(let i = 0; i < nodeIds.length - 1; i++) {
+        try {
+            let res = await fetch('/route', {
+                method: 'POST',
+                body: JSON.stringify({source: nodeIds[i], destination: nodeIds[i+1], algorithm: selectedAlgo})
+            });
+            let seg = await res.json();
+            if(!seg || seg.distance === -1) {
+                showPlacesError(`No road path found between stop ${i+1} and ${i+2}`);
+                showPlacesLoading(false);
+                return;
+            }
+            fullPath = fullPath.concat(seg.path_coords);
+            totalDist += seg.distance;
+        } catch(e) { showPlacesError("Server connection failed"); showPlacesLoading(false); return; }
+    }
+    
+    renderPlacesPath(fullPath, waypoints);
+    
+    document.getElementById('places-results').classList.remove('hidden');
+    document.getElementById('places-res-content').innerHTML = `
+        <p><b>Algorithm:</b> ${selectedAlgo}</p>
+        <p><b>Total Distance:</b> ${(totalDist/1000).toFixed(2)} km</p>
+        <p><b>Est. Drive Time:</b> ${Math.ceil((totalDist/13.8))} seconds</p>
+        <p><b>Route Stops:</b> ${waypoints.length}</p>
+    `;
+    showPlacesLoading(false);
+});
+
+document.getElementById('compare-places-btn').addEventListener('click', async () => {
+    const inputs = document.querySelectorAll('.place-search-input');
+    const startInput = inputs[0];
+    const endInput = inputs[inputs.length - 1];
+    
+    if(!startInput.dataset.lat || !endInput.dataset.lat) {
+        showPlacesError("Please select at least a Start and Destination from suggestions to compare.");
+        return;
+    }
+    
+    showPlacesLoading(true);
+    showPlacesError("");
+    
+    const startNode = await findNearestNode(parseFloat(startInput.dataset.lat), parseFloat(startInput.dataset.lon));
+    const endNode = await findNearestNode(parseFloat(endInput.dataset.lat), parseFloat(endInput.dataset.lon));
+    
+    if(startNode === -1 || endNode === -1) {
+        showPlacesError("Could not snap places to road network.");
+        showPlacesLoading(false);
+        return;
+    }
+    try {
+        let res = await fetch('/compare', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({source: startNode, destination: endNode})
+        });
+        if (!res.ok) throw new Error("Server error");
+        let data = await res.json();
+        
+        // Show the chart and report
+        renderChart(data);
+        generateReport(data);
+        showScreen('compare-screen');
+    } catch(e) { 
+        console.error(e);
+        showPlacesError("Comparison failed: Check if nodes are connected."); 
+    }
+    showPlacesLoading(false);
+});
+
+function renderPlacesPath(pathCoords, waypoints) {
+    pathLayerPlaces.clearLayers();
+    placeMarkers.forEach(m => mapPlaces.removeLayer(m));
+    placeMarkers = [];
+
+    const latlngs = pathCoords.map(c => [c.lat, c.lon]);
+    if (latlngs.length > 0) {
+        const poly = L.polyline(latlngs, {
+            color: getThemeColor(), 
+            weight: 6, 
+            opacity: 0.9,
+            lineJoin: 'round'
+        }).addTo(pathLayerPlaces);
+        mapPlaces.fitBounds(poly.getBounds(), {padding: [50, 50]});
+    }
+
+    waypoints.forEach((wp, idx) => {
+        let color = idx === 0 ? 'green' : (idx === waypoints.length-1 ? 'red' : 'purple');
+        const icon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="background-color:${color}; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>`,
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
+        });
+        const marker = L.marker([wp.lat, wp.lon], {icon}).addTo(mapPlaces).bindPopup(`Stop ${idx+1}: ${wp.name}`);
+        placeMarkers.push(marker);
+    });
+}
+
 // Theme Handlers
 const themes = [
     { id: 'blue', name: 'Default Blue' },
@@ -136,6 +413,11 @@ function applyTheme(index) {
     }
     document.getElementById('theme-text').innerText = `Theme: ${theme.name}`;
     localStorage.setItem('app-theme', index);
+
+    // Dynamic Map Path Color Sync
+    const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--btn-primary').trim() || '#2563eb';
+    if(pathLayer) pathLayer.setStyle({color: themeColor});
+    if(pathLayerPlaces) pathLayerPlaces.setStyle({color: themeColor});
 }
 
 document.getElementById('theme-btn').addEventListener('click', () => {
@@ -159,19 +441,13 @@ function initMap(centerLat, centerLon) {
     map.on('click', onMapClick);
 }
 
-function onMapClick(e) {
+async function onMapClick(e) {
     let lat = e.latlng.lat;
     let lon = e.latlng.lng;
-    let bestNode = -1;
-    let bestDist = Infinity;
     
-    for (let cn of coordNodes) {
-        let d = Math.pow(cn.lat - lat, 2) + Math.pow(cn.lon - lon, 2);
-        if (d < bestDist) {
-            bestDist = d;
-            bestNode = cn.id;
-        }
-    }
+    showLoading(true);
+    let bestNode = await findNearestNode(lat, lon);
+    showLoading(false);
     
     if (bestNode === -1) return;
     
@@ -229,6 +505,10 @@ document.getElementById('clear-btn').addEventListener('click', () => {
 });
 
 async function loadStats() {
+    // Initialize map immediately with defaults to prevent white screen
+    initMap(33.6844, 73.0479); 
+    initMapPlaces(33.6844, 73.0479);
+
     try {
         const res = await fetch('/api/stats');
         const data = await res.json();
@@ -239,13 +519,11 @@ async function loadStats() {
         if (data.preview_coords && data.preview_coords.length > 0) {
             coordNodes = data.preview_coords;
             for (let cn of coordNodes) nodeCoords[cn.id] = {lat: cn.lat, lon: cn.lon};
-            initMap(coordNodes[0].lat, coordNodes[0].lon);
-        } else {
-            initMap(33.6844, 73.0479);
+            // Map already initialized, just update view if needed
+            map.setView([coordNodes[0].lat, coordNodes[0].lon], 13);
         }
     } catch (e) {
-        document.getElementById('graph-stats').innerText = "Failed to load stats.";
-        initMap(33.6844, 73.0479);
+        document.getElementById('graph-stats').innerText = "Using default map view.";
     }
 }
 
@@ -286,7 +564,12 @@ document.getElementById('find-path-btn').addEventListener('click', async () => {
             
             let latlngs = data.path_coords.map(c => [c.lat, c.lon]);
             if (latlngs.length > 0) {
-                pathLayer = L.polyline(latlngs, {color: '#3b82f6', weight: 4, opacity: 0.8}).addTo(map);
+                pathLayer = L.polyline(latlngs, {
+                    color: getThemeColor(), 
+                    weight: 6, 
+                    opacity: 0.9,
+                    lineJoin: 'round'
+                }).addTo(map);
                 map.fitBounds(pathLayer.getBounds(), {padding: [50, 50]});
             }
         }
@@ -358,10 +641,7 @@ function generateReport(data) {
     document.getElementById('comparison-report').innerHTML = reportHtml;
 }
 
-document.getElementById('back-planner-btn').addEventListener('click', () => {
-    showScreen('planner-screen');
-});
-
+// Chart Logic function
 function renderChart(data) {
     const ctx = document.getElementById('compare-chart').getContext('2d');
     if (currentChart) currentChart.destroy();

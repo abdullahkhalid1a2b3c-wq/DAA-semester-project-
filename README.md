@@ -8,7 +8,10 @@ This system operates entirely on real-world OpenStreetMap data of Islamabad, Pak
 - **Real-World Map Data:** Capable of running live shortest-path routing on real-world Islamabad geographical coordinates.
 - **Advanced Authentication:** Fully secure, file-based email/password authentication system directly integrated into the C++ server. 
 - **Algorithm Benchmarking:** Compare algorithms dynamically with a built-in benchmarking suite that automatically renders visually stunning charts (via Chart.js).
-- **Interactive UI:** Smooth, single-page application built completely with Vanilla HTML/JS/CSS, featuring Leaflet.js map integration and real-time color theme switching!
+- **Place-to-Place Search:** Search for real-world landmarks, sectors, and streets in Islamabad with live geocoding suggestions.
+- **Multi-Stop Navigation:** Plan complex journeys by adding multiple intermediate waypoints to your route.
+- **Interactive UI:** A highly modern, card-based dashboard with glassmorphism, floating animations, and real-time color theme switching!
+- **Universal Theme Sync:** Switch themes and watch the entire app—including map paths and sidebars—instantly update its visual style.
 
 ---
 

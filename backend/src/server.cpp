@@ -59,6 +59,41 @@ std::string handle_request(const std::string& request) {
             response["preview_coords"] = coords_subset;
             return "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" + response.dump();
         }
+        else if(path.find("/api/nearest") == 0) {
+            auto q_start = path.find("?");
+            if(q_start == std::string::npos) return "HTTP/1.1 400 Bad Request\r\n\r\nMissing query";
+            
+            std::string query = path.substr(q_start+1);
+            double lat = 0, lon = 0;
+            auto lat_pos = query.find("lat=");
+            auto lon_pos = query.find("lon=");
+            
+            if(lat_pos != std::string::npos) {
+                std::string lat_str = query.substr(lat_pos + 4);
+                auto end_pos = lat_str.find("&");
+                if(end_pos != std::string::npos) lat_str = lat_str.substr(0, end_pos);
+                lat = std::stod(lat_str);
+            }
+            if(lon_pos != std::string::npos) {
+                std::string lon_str = query.substr(lon_pos + 4);
+                auto end_pos = lon_str.find("&");
+                if(end_pos != std::string::npos) lon_str = lon_str.substr(0, end_pos);
+                lon = std::stod(lon_str);
+            }
+
+            int bestNode = -1;
+            double bestDist = 1e18;
+            for(int i=0; i<g.num_nodes; ++i) {
+                if(g.coords[i].lat == 0.0) continue;
+                double d = pow(g.coords[i].lat - lat, 2) + pow(g.coords[i].lon - lon, 2);
+                if(d < bestDist) {
+                    bestDist = d;
+                    bestNode = i;
+                }
+            }
+            json res; res["id"] = bestNode;
+            return "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" + res.dump();
+        }
     } else if(method == "POST") {
         if(path == "/load_dataset") {
             try {
@@ -80,6 +115,12 @@ std::string handle_request(const std::string& request) {
                 auto req_body = json::parse(body);
                 int start = req_body["source"];
                 int end = req_body["destination"];
+
+                if(start < 0 || start >= g.num_nodes || end < 0 || end >= g.num_nodes) {
+                    json err; err["status"] = "error"; err["message"] = "Invalid source or destination";
+                    return "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" + err.dump();
+                }
+
                 std::string algo = req_body.value("algorithm", "Bidirectional Dijkstra");
                 
                 AlgoResult result;
@@ -113,6 +154,10 @@ std::string handle_request(const std::string& request) {
                 auto req_body = json::parse(body);
                 int start = req_body["source"];
                 int end = req_body["destination"];
+
+                if(start < 0 || start >= g.num_nodes || end < 0 || end >= g.num_nodes) {
+                    return "HTTP/1.1 400 Bad Request\r\n\r\nInvalid node IDs";
+                }
                 
                 auto bid_res = bidirectional_dijkstra(g, start, end);
                 auto dij_res = dijkstra(g, start, end);
