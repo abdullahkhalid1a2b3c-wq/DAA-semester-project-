@@ -6,12 +6,115 @@
     <title>Bi-Directional Route Planner</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div id="app">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="screen active-screen login-bg">
+        <!-- LOGIN CARD -->
+        <div id="login-card" class="auth-card">
+            <h1 class="auth-title">Login</h1>
+            <p class="auth-subtitle">Welcome to Islamabad Route Network</p>
+            
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="login-email" placeholder="Enter email">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="login-pass" placeholder="Enter password">
+            </div>
+            
+            <div id="login-error" class="hidden error-text"></div>
+            
+            <button id="login-submit-btn" class="primary-btn w-100 mt-1">Login</button>
+            <p class="auth-link mt-1" onclick="switchAuthCard('signup-card')">Don't have an account? Sign Up</p>
+            <p class="auth-link" onclick="switchAuthCard('reset-card')">Forgot Password?</p>
+        </div>
+
+        <!-- SIGNUP CARD -->
+        <div id="signup-card" class="auth-card hidden">
+            <h1 class="auth-title">Sign Up</h1>
+            <p class="auth-subtitle">Create an account</p>
+            
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="signup-email" placeholder="Enter email">
+            </div>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="signup-user" placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="signup-pass" placeholder="Enter password">
+            </div>
+            
+            <div id="signup-error" class="hidden error-text"></div>
+            
+            <button id="signup-submit-btn" class="primary-btn w-100 mt-1">Sign Up</button>
+            <p class="auth-link mt-1" onclick="switchAuthCard('login-card')">Already have an account? Login</p>
+        </div>
+
+        <!-- RESET CARD -->
+        <div id="reset-card" class="auth-card hidden">
+            <h1 class="auth-title">Reset Password</h1>
+            <p class="auth-subtitle">Verify ownership to reset</p>
+            
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="reset-email" placeholder="Enter email">
+            </div>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="reset-user" placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <label>New Password</label>
+                <input type="password" id="reset-pass" placeholder="Enter new password">
+            </div>
+            
+            <div id="reset-error" class="hidden error-text"></div>
+            
+            <button id="reset-submit-btn" class="primary-btn w-100 mt-1">Reset Password</button>
+            <p class="auth-link mt-1" onclick="switchAuthCard('login-card')">← Back to Login</p>
+        </div>
+    </div>
+
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="screen home-bg hidden">
+        <div class="home-container">
+            <h1 class="mega-title">Islamabad Route Network</h1>
+            <p class="home-subtitle">Select an option to proceed</p>
+            
+            <div class="home-buttons">
+                <button id="nav-planner-btn" class="huge-btn route-btn">
+                    <span class="icon">🗺️</span>
+                    <span class="text">Find a Route & Compare</span>
+                </button>
+                <button id="nav-help-btn" class="huge-btn help-btn">
+                    <span class="icon">❓</span>
+                    <span class="text">How to Use Website</span>
+                </button>
+                <button id="theme-btn" class="huge-btn" style="background: linear-gradient(135deg, #14b8a6, #0d9488); transition: background 0.5s ease;">
+                    <span class="icon">🎨</span>
+                    <span id="theme-text" class="text">Theme: Default Blue</span>
+                </button>
+                <button id="nav-logout-btn" class="huge-btn exit-btn">
+                    <span class="icon">🚪</span>
+                    <span class="text">Logout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLANNER SCREEN -->
+    <div id="planner-screen" class="screen planner-layout hidden">
         <div id="control-panel">
+            <button id="back-home-btn" class="secondary-btn mb-1">← Back to Home</button>
             <h1>Route Planner</h1>
             
             <div class="card" id="dataset-section">
@@ -59,10 +162,7 @@
                 <div class="stat-row"><span>Nodes Visited:</span> <span id="res-visited">-</span></div>
             </div>
 
-            <div id="compare-panel" class="card hidden">
-                <h3>Comparison</h3>
-                <canvas id="compare-chart" width="400" height="300"></canvas>
-            </div>
+
             
             <div id="error-msg" class="hidden"></div>
             <div id="loading" class="hidden">Computing...</div>
@@ -72,6 +172,75 @@
             <div id="map"></div>
         </div>
     </div>
+
+    <!-- HELP SCREEN -->
+    <div id="help-screen" class="screen hidden" style="background: var(--bg-grad-1, #f8fafc); overflow-y: auto; display: flex; flex-direction: column;">
+        <!-- Fixed Header -->
+        <div style="width: 100%; background: white; padding: 1rem 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50;">
+            <h2 style="color: #0f172a; margin: 0; font-size: 1.8rem; font-weight: 700;">How to Use the Website</h2>
+            <button id="back-home-help-btn" class="primary-btn" style="background: #dc2626; padding: 0.8rem 1.5rem; font-size: 1.1rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(220,38,38,0.3);">← Back to Home</button>
+        </div>
+        
+        <!-- Main Content -->
+        <div style="max-width: 1000px; width: 100%; margin: 2rem auto; padding: 2.5rem; background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 2.5rem; color: #1e293b; font-size: 1.15rem; line-height: 1.7;">
+            
+            <!-- Section 1 -->
+            <div>
+                <h3 style="color: #3b82f6; font-size: 1.6rem; margin-bottom: 1rem; border-bottom: 3px solid #eff6ff; padding-bottom: 0.5rem;">1. Authentication (Login / Sign Up)</h3>
+                <ul style="padding-left: 1.5rem; list-style-type: disc;">
+                    <li style="margin-bottom: 0.5rem;"><strong>Sign Up:</strong> New users must register using a unique Username, Email, and Password. Click the "Don't have an account? Sign up" link on the main card.</li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Login:</strong> Once registered, simply enter your Email and Password to securely access the system.</li>
+                    <li><strong>Password Recovery:</strong> If you forget your password, click "Forgot Password?". You must verify both your Email and Username to reset it securely.</li>
+                </ul>
+            </div>
+
+            <!-- Section 2 -->
+            <div>
+                <h3 style="color: #8b5cf6; font-size: 1.6rem; margin-bottom: 1rem; border-bottom: 3px solid #f5f3ff; padding-bottom: 0.5rem;">2. Home Screen Dashboard</h3>
+                <ul style="padding-left: 1.5rem; list-style-type: disc;">
+                    <li style="margin-bottom: 0.5rem;"><strong>Navigation Menu:</strong> The central hub of the application. Select "Find a Route & Compare" to access the map planner.</li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Theme Engine:</strong> Click the "🎨 Theme" button to dynamically change the entire website's visual color scheme. Your choice is automatically saved!</li>
+                    <li><strong>Logout:</strong> Securely sign out of your account by clicking the Logout button, taking you back to the authentication screen.</li>
+                </ul>
+            </div>
+
+            <!-- Section 3 -->
+            <div>
+                <h3 style="color: #10b981; font-size: 1.6rem; margin-bottom: 1rem; border-bottom: 3px solid #ecfdf5; padding-bottom: 0.5rem;">3. Route Finding & Comparison</h3>
+                <ul style="padding-left: 1.5rem; list-style-type: disc;">
+                    <li style="margin-bottom: 0.5rem;"><strong>Select Nodes:</strong> Use your mouse to <strong>Click anywhere on the Map</strong> to set your Source (Start) and Destination (End) points. You can also manually type the exact Node IDs into the control panel.</li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Pick an Algorithm:</strong> Choose from Bidirectional Dijkstra (Fastest Default), Standard Dijkstra, A* Search, or BFS (Unweighted).</li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Find Route:</strong> Click the blue "Find Route" button. The highly optimized backend C++ server will calculate the optimal path in milliseconds and draw the exact trajectory on the map.</li>
+                    <li><strong>Compare All Algorithms:</strong> Click this button to run a massive benchmarking test! It opens a full-screen dynamic bar chart comparing the speed and efficiency of all algorithms, accompanied by an Academic Summary highlighting the optimal choices.</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- COMPARE SCREEN -->
+    <div id="compare-screen" class="screen hidden" style="background: #f8fafc; overflow-y: auto; display: flex; flex-direction: column;">
+        <!-- Fixed Header for Navigation -->
+        <div style="width: 100%; background: white; padding: 1rem 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50;">
+            <h2 style="color: #0f172a; margin: 0; font-size: 1.8rem; font-weight: 700;">Algorithms Comparison Analysis</h2>
+            <button id="back-planner-btn" class="primary-btn" style="background: #dc2626; padding: 0.8rem 1.5rem; font-size: 1.1rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(220,38,38,0.3);">← Back to Map Planner</button>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div style="max-width: 1200px; width: 100%; margin: 2rem auto; padding: 0 1rem; display: flex; flex-direction: column; align-items: center; gap: 2rem;">
+            
+            <!-- Chart Container -->
+            <div style="background: white; width: 100%; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; justify-content: center;">
+                <div style="position: relative; height: 55vh; width: 100%; max-width: 900px;">
+                    <canvas id="compare-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Academic Summary -->
+            <div id="comparison-report" style="width: 100%; font-size: 1.25rem; line-height: 1.8; color: #000000; background: #22c55e; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(34,197,94,0.4); text-align: center; font-weight: 500;"></div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>

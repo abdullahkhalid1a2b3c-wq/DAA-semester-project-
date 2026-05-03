@@ -29,7 +29,6 @@ bin/
 *.app
 CMakeCache.txt
 CMakeFiles/
-Makefile
 cmake_install.cmake
 compile_commands.json
 
@@ -40,6 +39,9 @@ backend/test
 
 # Logs
 *.log
+
+# Databases
+backend/users.json
 
 # OS Generated Files
 .DS_Store

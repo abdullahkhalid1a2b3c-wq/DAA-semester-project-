@@ -139,6 +139,69 @@ std::string handle_request(const std::string& request) {
                 return "HTTP/1.1 400 Bad Request\r\n\r\n" + std::string(e.what());
             }
         }
+        else if(path == "/api/signup") {
+            try {
+                auto req_body = json::parse(body);
+                std::string email = req_body["email"];
+                std::string user = req_body["username"];
+                std::string pass = req_body["password"];
+                json users = json::object();
+                std::ifstream users_file("users.json");
+                if (users_file.is_open()) {
+                    try { users_file >> users; } catch(...) {}
+                    users_file.close();
+                }
+                if (users.contains(email)) {
+                    return "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"error\":\"Email already exists\"}";
+                }
+                users[email] = {{"username", user}, {"password", pass}};
+                std::ofstream out_file("users.json");
+                out_file << users.dump(4);
+                out_file.close();
+                return "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"success\"}";
+            } catch (const std::exception& e) { return "HTTP/1.1 400 Bad Request\r\n\r\n" + std::string(e.what()); }
+        }
+        else if(path == "/api/login") {
+            try {
+                auto req_body = json::parse(body);
+                std::string email = req_body["email"];
+                std::string pass = req_body["password"];
+                json users = json::object();
+                std::ifstream users_file("users.json");
+                if (users_file.is_open()) {
+                    try { users_file >> users; } catch(...) {}
+                    users_file.close();
+                }
+                if (users.contains(email) && users[email]["password"] == pass) {
+                    return "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"success\"}";
+                } else {
+                    return "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n{\"error\":\"Invalid credentials\"}";
+                }
+            } catch (const std::exception& e) { return "HTTP/1.1 400 Bad Request\r\n\r\n" + std::string(e.what()); }
+        }
+        else if(path == "/api/reset_password") {
+            try {
+                auto req_body = json::parse(body);
+                std::string email = req_body["email"];
+                std::string user = req_body["username"];
+                std::string new_pass = req_body["new_password"];
+                json users = json::object();
+                std::ifstream users_file("users.json");
+                if (users_file.is_open()) {
+                    try { users_file >> users; } catch(...) {}
+                    users_file.close();
+                }
+                if (users.contains(email) && users[email]["username"] == user) {
+                    users[email]["password"] = new_pass;
+                    std::ofstream out_file("users.json");
+                    out_file << users.dump(4);
+                    out_file.close();
+                    return "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"success\"}";
+                } else {
+                    return "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n{\"error\":\"Email and Username do not match\"}";
+                }
+            } catch (const std::exception& e) { return "HTTP/1.1 400 Bad Request\r\n\r\n" + std::string(e.what()); }
+        }
     }
     
     return "HTTP/1.1 404 Not Found\r\n\r\nNot Found";

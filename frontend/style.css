@@ -1,5 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
+:root {
+    --bg-grad-1: #0f172a;
+    --bg-grad-2: #1e3a8a;
+    --btn-route-1: #3b82f6;
+    --btn-route-2: #2563eb;
+    --btn-primary: #3b82f6;
+    --btn-primary-hover: #2563eb;
+}
+
+[data-theme="green"] {
+    --bg-grad-1: #064e3b;
+    --bg-grad-2: #047857;
+    --btn-route-1: #10b981;
+    --btn-route-2: #059669;
+    --btn-primary: #10b981;
+    --btn-primary-hover: #059669;
+}
+
+[data-theme="purple"] {
+    --bg-grad-1: #312e81;
+    --bg-grad-2: #4c1d95;
+    --btn-route-1: #8b5cf6;
+    --btn-route-2: #7c3aed;
+    --btn-primary: #8b5cf6;
+    --btn-primary-hover: #7c3aed;
+}
+
+[data-theme="dark"] {
+    --bg-grad-1: #09090b;
+    --bg-grad-2: #27272a;
+    --btn-route-1: #52525b;
+    --btn-route-2: #3f3f46;
+    --btn-primary: #52525b;
+    --btn-primary-hover: #3f3f46;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { 
     font-family: 'Outfit', sans-serif; 
@@ -7,8 +43,115 @@ body {
     height: 100vh; 
     overflow: hidden; 
 }
-#app { display: flex; height: 100vh; width: 100vw; }
 
+/* SCREEN MANAGEMENT */
+.screen {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+.hidden { display: none !important; }
+.active-screen { display: flex; }
+.planner-layout { display: flex; } /* same as old #app */
+
+/* LOGIN & HOME BACKGROUNDS */
+.login-bg {
+    background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+    transition: background 0.5s ease;
+    align-items: center;
+    justify-content: center;
+}
+.home-bg {
+    background: linear-gradient(145deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+    transition: background 0.5s ease;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* AUTH CARD */
+.auth-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 2.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    width: 380px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    color: white;
+}
+.auth-subtitle { color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.5rem; text-align: center; }
+.error-text { color: #fecaca; background: rgba(239, 68, 68, 0.2); padding: 0.8rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1rem; border-left: 3px solid #ef4444; }
+
+.auth-link {
+    color: #60a5fa;
+    font-size: 0.9rem;
+    text-align: center;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.auth-link:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+}
+
+/* HOME CONTAINER & BUTTONS */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+.mega-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #93c5fd, #e0e7ff, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+}
+.home-subtitle { color: #94a3b8; font-size: 1.2rem; }
+
+.home-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    width: 350px;
+}
+.huge-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.2rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: white;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+.route-btn { background: linear-gradient(135deg, var(--btn-route-1) 0%, var(--btn-route-2) 100%); transition: background 0.5s ease; }
+.help-btn { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+.exit-btn { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+
+.huge-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+    filter: brightness(1.1);
+}
+.huge-btn:active { transform: translateY(0); }
+
+/* UTILS */
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mb-1 { margin-bottom: 1rem; }
+.w-100 { width: 100%; }
+
+/* PLANNER LAYOUT (OLD CSS) */
 #control-panel {
     width: 30%;
     min-width: 400px;
@@ -86,6 +229,20 @@ select option {
     color: white;
 }
 
+.primary-btn {
+    background: var(--btn-primary);
+    color: white;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+.primary-btn:hover { background: var(--btn-primary-hover); }
+.primary-btn:active { transform: scale(0.98); }
+
 button {
     padding: 0.9rem;
     border: none;
@@ -105,18 +262,16 @@ button:hover {
 }
 button:active { transform: translateY(0); }
 
-button.secondary { 
+button.secondary, .secondary-btn { 
     background: rgba(255, 255, 255, 0.1); 
     color: #e2e8f0; 
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-button.secondary:hover { 
+button.secondary:hover, .secondary-btn:hover { 
     background: rgba(255, 255, 255, 0.15); 
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
-
-.hidden { display: none !important; }
 
 .stat-row { 
     display: flex; 
@@ -162,3 +317,27 @@ button.secondary:hover {
     animation: pulse 1.5s ease-in-out infinite; 
 }
 @keyframes pulse { 0% {opacity:0.6; transform: scale(0.98);} 50% {opacity:1; transform: scale(1);} 100% {opacity:0.6; transform: scale(0.98);} }
+
+/* MODAL */
+.modal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.modal-content {
+    background: white; color: #1e293b; padding: 2.5rem; border-radius: 12px; width: 500px;
+}
+.modal-content h2 { margin-bottom: 1rem; color: #0f172a; }
+.modal-content p { margin-bottom: 0.8rem; line-height: 1.5; }
+
+/* COMPARISON REPORT */
+.report-box {
+    background: rgba(16, 185, 129, 0.15);
+    border-left: 4px solid #10b981;
+    padding: 1rem;
+    border-radius: 8px;
+    color: #ecfdf5;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
