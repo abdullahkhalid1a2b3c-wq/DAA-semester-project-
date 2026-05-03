@@ -11,7 +11,6 @@ Data Set/
 *.osm
 
 # Datasets and cache (From GitHub)
-backend/dataset/
 backend/cache/
 
 # C++ Build & Compilation Artifacts
