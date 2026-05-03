@@ -6,6 +6,7 @@
 dataset/pk/
 dataset/*.zip
 *.txt
+!backend/dataset/islamabad.txt
 *.graphml
 *.csv
 *.pbf
