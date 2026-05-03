@@ -3,7 +3,8 @@
 # ---------------------------------------------------------------------------
 
 # Data Sets (Heavy files that should NEVER be pushed to GitHub)
-Data Set/
+dataset/pk/
+dataset/*.zip
 *.txt
 *.graphml
 *.csv
